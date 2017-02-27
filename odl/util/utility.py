@@ -20,7 +20,7 @@ from pkg_resources import parse_requirements
 
 __all__ = ('array1d_repr', 'array1d_str', 'arraynd_repr', 'arraynd_str',
            'dtype_repr', 'dtype_str', 'signature_string', 'indent_rows',
-           'is_scalar_dtype', 'is_int_dtype', 'is_floating_dtype',
+           'is_numeric_dtype', 'is_int_dtype', 'is_floating_dtype',
            'is_real_dtype', 'is_real_floating_dtype',
            'is_complex_floating_dtype', 'real_dtype', 'complex_dtype',
            'conj_exponent', 'as_flat_array', 'writable_array',
@@ -223,8 +223,8 @@ def with_metaclass(meta, *bases):
     return metaclass('temporary_class', None, {})
 
 
-def is_scalar_dtype(dtype):
-    """Return ``True`` if ``dtype`` is a scalar type."""
+def is_numeric_dtype(dtype):
+    """Return ``True`` if ``dtype`` is a numeric type."""
     return np.issubsctype(dtype, np.number)
 
 
@@ -240,7 +240,7 @@ def is_floating_dtype(dtype):
 
 def is_real_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real (including integer) type."""
-    return is_scalar_dtype(dtype) and not is_complex_floating_dtype(dtype)
+    return is_numeric_dtype(dtype) and not is_complex_floating_dtype(dtype)
 
 
 def is_real_floating_dtype(dtype):
