@@ -26,8 +26,8 @@ import scipy.special
 
 from odl.operator import (Operator, IdentityOperator, ScalingOperator,
                           ConstantOperator, DiagonalOperator)
+from odl.set.space import LinearSpaceElement
 from odl.space import ProductSpace
-from odl.set import LinearSpaceElement
 
 
 __all__ = ('combine_proximals', 'proximal_cconj', 'proximal_translation',
