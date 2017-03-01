@@ -170,6 +170,8 @@ def dtype_repr(dtype):
         return "'float'"
     elif dtype == np.dtype(complex):
         return "'complex'"
+    elif dtype.shape:
+        return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return "'{}'".format(dtype)
 
@@ -183,6 +185,8 @@ def dtype_str(dtype):
         return 'float'
     elif dtype == np.dtype(complex):
         return 'complex'
+    elif dtype.shape:
+        return "('{}', {})".format(dtype.base, dtype.shape)
     else:
         return '{}'.format(dtype)
 
@@ -225,12 +229,12 @@ def with_metaclass(meta, *bases):
 
 def is_numeric_dtype(dtype):
     """Return ``True`` if ``dtype`` is a numeric type."""
-    return np.issubsctype(dtype, np.number)
+    return np.issubsctype(getattr(dtype, 'base', None), np.number)
 
 
 def is_int_dtype(dtype):
     """Return ``True`` if ``dtype`` is an integer type."""
-    return np.issubsctype(dtype, np.integer)
+    return np.issubsctype(getattr(dtype, 'base', None), np.integer)
 
 
 def is_floating_dtype(dtype):
@@ -245,12 +249,12 @@ def is_real_dtype(dtype):
 
 def is_real_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a real floating point type."""
-    return np.issubsctype(dtype, np.floating)
+    return np.issubsctype(getattr(dtype, 'base', None), np.floating)
 
 
 def is_complex_floating_dtype(dtype):
     """Return ``True`` if ``dtype`` is a complex floating point type."""
-    return np.issubsctype(dtype, np.complexfloating)
+    return np.issubsctype(getattr(dtype, 'base', None), np.complexfloating)
 
 
 def real_dtype(dtype, default=None):
@@ -275,6 +279,28 @@ def real_dtype(dtype, default=None):
     ValueError
         if there is no real counterpart to the given data type and
         ``default == None``.
+
+    See Also
+    --------
+    complex_dtype
+
+    Examples
+    --------
+    Convert scalar dtypes:
+
+    >>> real_dtype(complex)
+    dtype('float64')
+    >>> real_dtype('complex64')
+    dtype('float32')
+    >>> real_dtype(float)
+    dtype('float64')
+
+    Dtypes with shape are also supported:
+
+    >>> real_dtype(np.dtype((complex, (3,))))
+    dtype(('<f8', (3,)))
+    >>> real_dtype(('complex64', (3,)))
+    dtype(('<f4', (3,)))
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -282,7 +308,7 @@ def real_dtype(dtype, default=None):
         return dtype
 
     try:
-        real_dtype = TYPE_MAP_C2R[dtype]
+        real_base_dtype = TYPE_MAP_C2R[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -290,7 +316,7 @@ def real_dtype(dtype, default=None):
             raise ValueError('no real counterpart exists for `dtype` {}'
                              ''.format(dtype_repr(dtype_in)))
     else:
-        return real_dtype
+        return np.dtype((real_base_dtype, dtype.shape))
 
 
 def complex_dtype(dtype, default=None):
@@ -315,6 +341,24 @@ def complex_dtype(dtype, default=None):
     ValueError
         if there is no complex counterpart to the given data type and
         ``default == None``.
+
+    Examples
+    --------
+    Convert scalar dtypes:
+
+    >>> complex_dtype(float)
+    dtype('complex128')
+    >>> complex_dtype('float32')
+    dtype('complex64')
+    >>> complex_dtype(complex)
+    dtype('complex128')
+
+    Dtypes with shape are also supported:
+
+    >>> complex_dtype(np.dtype((float, (3,))))
+    dtype(('<c16', (3,)))
+    >>> complex_dtype(('float32', (3,)))
+    dtype(('<c8', (3,)))
     """
     dtype, dtype_in = np.dtype(dtype), dtype
 
@@ -322,7 +366,7 @@ def complex_dtype(dtype, default=None):
         return dtype
 
     try:
-        complex_dtype = TYPE_MAP_R2C[dtype]
+        complex_base_dtype = TYPE_MAP_R2C[dtype.base]
     except KeyError:
         if default is not None:
             return default
@@ -330,7 +374,7 @@ def complex_dtype(dtype, default=None):
             raise ValueError('no complex counterpart exists for `dtype` {}'
                              ''.format(dtype_repr(dtype_in)))
     else:
-        return complex_dtype
+        return np.dtype((complex_base_dtype, dtype.shape))
 
 
 def conj_exponent(exp):
