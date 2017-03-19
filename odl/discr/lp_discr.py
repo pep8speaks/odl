@@ -633,18 +633,17 @@ class DiscreteLpElement(DiscretizedSpaceElement):
         method : string, optional
             1d methods:
 
-            'plot' : graph plot
+                ``'plot'`` : graph plot
 
-            'scatter' : scattered 2d points
-            (2nd axis <-> value)
+                ``'scatter'`` : scattered 2d points (2nd axis <-> value)
 
             2d methods:
 
-            'imshow' : image plot with coloring according to value,
-            including a colorbar.
+                ``'imshow'`` : image plot with coloring according to
+                value, including a colorbar.
 
-            'scatter' : cloud of scattered 3d points
-            (3rd axis <-> value)
+                ``'scatter'`` : cloud of scattered 3d points
+                (3rd axis <-> value)
 
         coords : `array-like`, optional
             Display a slice of the array instead of the full array.
