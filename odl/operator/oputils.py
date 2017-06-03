@@ -370,24 +370,13 @@ def as_scipy_functional(func, return_gradient=False):
     incurs no significant overhead. If the space type is ``CudaFn`` or some
     other nonlocal type, the overhead is significant.
     """
-    def as_shaped_array(arr):
-        if hasattr(func.domain, 'order'):
-            return np.asarray(arr).reshape(func.domain.order)
-        else:
-            return np.asarray(arr)
-
-    def as_flat_array(vec):
-        if hasattr(vec, 'order'):
-            return np.asarray(vec).ravel(vec.order)
-        else:
-            return np.asarray(vec)
-
     def func_call(arr):
-        return func(as_shaped_array(arr))
+        return func(np.asarray(arr).reshape(func.domain.shape))
 
     if return_gradient:
         def func_gradient_call(arr):
-            return as_flat_array(func.gradient(as_shaped_array(arr)))
+            return np.asarray(
+                func.gradient(np.asarray(arr).reshape(func.domain.shape)))
 
         return func_call, func_gradient_call
     else:
@@ -425,7 +414,6 @@ def as_proximal_lang_operator(op, norm_bound=None):
     ----------
     For documentation on the proximal language (ProxImaL) see [Hei+2016]_.
     """
-
     # TODO: use out parameter once "as editable array" is added
 
     def forward(inp, out):
@@ -442,6 +430,5 @@ def as_proximal_lang_operator(op, norm_bound=None):
                                  norm_bound=norm_bound)
 
 if __name__ == '__main__':
-    # pylint: disable=wrong-import-position
     from odl.util.testutils import run_doctests
     run_doctests()
