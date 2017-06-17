@@ -1,0 +1,20 @@
+tomo
+====
+
+Tomographic datasets.
+
+.. currentmodule:: odl.datasets.tomo
+
+
+
+
+.. rubric:: Functions
+
+.. autosummary::
+   :toctree: generated/
+
+   ~odl.datasets.tomo.lotus_root_data
+   ~odl.datasets.tomo.lotus_root_geometry
+   ~odl.datasets.tomo.walnut_data
+   ~odl.datasets.tomo.walnut_geometry
+

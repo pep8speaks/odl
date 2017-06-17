@@ -1,0 +1,6 @@
+get_data
+==========================
+
+.. currentmodule:: odl.datasets.util
+
+.. autofunction:: get_data

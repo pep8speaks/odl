@@ -1,0 +1,6 @@
+walnut_geometry
+=================================
+
+.. currentmodule:: odl.datasets.tomo
+
+.. autofunction:: walnut_geometry

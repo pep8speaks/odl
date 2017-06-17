@@ -1,0 +1,18 @@
+datasets
+========
+
+Access to real or simulated datasets.
+
+.. currentmodule:: odl.datasets
+
+
+.. rubric:: Modules
+
+.. toctree::
+   :maxdepth: 2
+
+   odl.datasets.tomo
+   odl.datasets.util
+
+
+

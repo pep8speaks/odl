@@ -1,0 +1,6 @@
+lotus_root_geometry
+=====================================
+
+.. currentmodule:: odl.datasets.tomo
+
+.. autofunction:: lotus_root_geometry

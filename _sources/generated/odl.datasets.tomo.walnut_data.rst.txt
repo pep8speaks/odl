@@ -1,0 +1,6 @@
+walnut_data
+=============================
+
+.. currentmodule:: odl.datasets.tomo
+
+.. autofunction:: walnut_data
