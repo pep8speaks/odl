@@ -312,12 +312,12 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
     # Extrapolation factor theta
     extra = kwargs.pop('extra', None)
     if extra is None:
-        extra = [1 for _ in sigma]
+        extra = [1] * len(sigma)
 
     # Initialize variables
     z_relax = z.copy()
-    dual_tmp = A.range.element()
-    dz = z.copy()
+    dz = A.domain.element()
+    y_old = A.range.element()
 
     # Save proximal operators
     proximal_dual_sigma = [fi.convex_conj.proximal(si)
@@ -331,31 +331,41 @@ def spdhg_generic(x, f, g, A, tau, sigma, niter, fun_select, **kwargs):
         selected = fun_select(k)
 
         # update primal variable
-        z_relax.lincomb(1, x, -tau, z_relax)  # z_relax used as tmp variable
+        # tmp = x - tau * z_relax; z_relax used as tmp variable
+        z_relax.lincomb(1, x, -tau, z_relax)
+        # x = prox(tmp)
         proximal_primal_tau(z_relax, out=x)
 
         # update extrapolation parameter theta
         if update_proximal_primal:
-            theta = 1 / np.sqrt(1 + 2 * mu_g * tau)
+            theta = float(1 / np.sqrt(1 + 2 * mu_g * tau))
 
-        # update dual variable and adj_y, adj_y_bar
+        # update dual variable and z, z_relax
         z_relax.assign(z)
         for i in selected:
 
-            # update dual variable
-            dual_tmp[i].assign(y[i])
-            A[i](x, out=y[i])
-            y[i].lincomb(1, dual_tmp[i], sigma[i], y[i])
+            # save old yi
+            y_old[i].assign(y[i])
 
-            yi = y[i].copy()
-            proximal_dual_sigma[i](yi, out=y[i])
+            # tmp = Ai(x)
+            A[i](x, out=y[i])
+
+            # tmp = y_old + sigma_i * Ai(x)
+            y[i].lincomb(1, y_old[i], sigma[i], y[i])
+
+            # hack for the prox operator
+            yy = y[i].copy()
+
+            # y[i]= prox(tmp)
+            proximal_dual_sigma[i](yy, out=y[i])
 
             # update adjoint of dual variable
-            A[i].adjoint(y[i] - dual_tmp[i], out=dz)
+            y_old[i].lincomb(-1, y_old[i], 1, y[i])
+            A[i].adjoint(y_old[i], out=dz)
             z += dz
 
             # compute extrapolation
-            z_relax += (1 + extra[i] * theta) * dz
+            z_relax.lincomb(1, z_relax, 1 + theta * extra[i], dz)
 
         # update the step sizes tau and sigma for acceleration
         if update_proximal_primal:
@@ -441,39 +451,58 @@ def da_spdhg(x, f, g, A, tau, sigma_tilde, niter, extra, prob, mu, fun_select,
 
     # Initialize variables
     z_relax = z.copy()
-    dual_tmp = y.copy()
-    dz = z.copy()
+    dz = A.domain.element()
+    y_old = A.range.element()
+
+    # Save proximal operators
+    prox_dual = [fi.convex_conj.proximal for fi in f]
+    prox_primal = g.proximal
 
     # run the iterations
     for k in range(niter):
+
         # select block
         selected = fun_select(k)
 
         # update extrapolation parameter theta
-        theta = 1 / np.sqrt(1 + 2 * sigma_tilde)
-        # update primal variable
-        g.proximal(tau)(x - tau * z, out=x)
+        theta = float(1 / np.sqrt(1 + 2 * sigma_tilde))
 
-        # update dual variable and adj_y, adj_y_bar
+        # update primal variable
+        # tmp = x - tau * z_relax; z_relax used as tmp variable
+        z_relax.lincomb(1, x, -tau, z_relax)
+        # x = prox(tmp)
+        prox_primal(tau)(z_relax, out=x)
+
+        # update dual variable and z, z_relax
         z_relax.assign(z)
         for i in selected:
+
             # compute the step sizes sigma_i based on sigma_tilde
             sigma_i = sigma_tilde / (
                     mu[i] * (prob[i] - 2 * (1 - prob[i]) * sigma_tilde))
 
-            # update dual variable
-            dual_tmp[i].assign(y[i])
+            # save old yi
+            y_old[i].assign(y[i])
+
+            # tmp = Ai(x)
             A[i](x, out=y[i])
-            y[i].lincomb(1, dual_tmp[i], sigma_i, y[i])
-            yi = y[i].copy()
-            f[i].convex_conj.proximal(sigma_i)(yi, out=y[i])
+
+            # tmp = y_old + sigma_i * Ai(x)
+            y[i].lincomb(1, y_old[i], sigma_i, y[i])
+
+            # hack for the prox operator
+            yy = y[i].copy()
+
+            # yi++ = fi*.prox_sigmai(yi)
+            prox_dual[i](sigma_i)(yy, out=y[i])
 
             # update adjoint of dual variable
-            A[i].adjoint(y[i] - dual_tmp[i], out=dz)
+            y_old[i].lincomb(-1, y_old[i], 1, y[i])
+            A[i].adjoint(y_old[i], out=dz)
             z += dz
 
             # compute extrapolation
-            z_relax += (1 + theta * extra[i]) * dz
+            z_relax.lincomb(1, z_relax, 1 + theta * extra[i], dz)
 
         # update the step sizes tau and sigma_tilde for acceleration
         sigma_tilde *= theta
